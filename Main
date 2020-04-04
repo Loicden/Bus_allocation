@@ -697,3 +697,5 @@ p_m = 0.3        # Proportion de petite mutation de taille e_m autour du meilleu
 p_s = 0.3        # Proportion de sexe : individu ← (individu max + individu)/2
 
 Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux)
+
+#Up
