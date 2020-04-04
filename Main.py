@@ -590,33 +590,11 @@ def T_build(arrets):
                 T[i,j] = int(rd.uniform(0,11))
     return T
 
-### MAIN ###
-
-liste_arrets = create_arrets()
-T = T_build(liste_arrets)
-liste_reseaux = []
-
-
-for i in range(16):
-    plt.subplot(4,4,i+1)
-    liste_reseaux.append(Reseau(liste_arrets))
-    liste_reseaux[-1].D_build()
-    liste_reseaux[-1].U_build()
-    liste_reseaux[-1].Calcul_ATT(liste_reseaux[-1].U, T)
-    #liste_reseaux[-1].display(False)
-    for a in liste_arrets:
-        a.r_m = False
-        
 def ATT_liste_build(liste_reseaux):
     ATT_liste = []
     for i in liste_reseaux:
         ATT_liste.append(i.ATT)
     return ATT_liste
-    
-ATT_liste = ATT_liste_build(liste_reseaux)
-
-#plt.show
-
 
 def Ordonner_reseaux(liste_reseaux, ATT_liste):
     ATT_liste_ord = copy.deepcopy(ATT_liste)
@@ -626,12 +604,6 @@ def Ordonner_reseaux(liste_reseaux, ATT_liste):
         liste_reseaux_ord.append(liste_reseaux[ATT_liste.index(i)])
     liste_reseaux = liste_reseaux_ord
     return [liste_reseaux, ATT_liste_ord]
-   
-[liste_reseaux, ATT_liste] = Ordonner_reseaux(liste_reseaux, ATT_liste)
-
-print(ATT_liste)
-
-### Evolution des solutions ###
 
 def Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux):
     
@@ -689,6 +661,46 @@ def Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux):
     pylab.show()
     
     return Temps
+
+
+### MAIN ###
+
+liste_arrets = create_arrets()
+T = T_build(liste_arrets)
+liste_reseaux = []
+
+Reseau = Reseau(liste_arrets)
+Reseau.D_build()
+Reseau.U_build()
+Reseau.Calcul_ATT(Reseau.U, T)
+Reseau.display(False)
+plt.show
+
+
+"""
+for i in range(16):
+    plt.subplot(4,4,i+1)
+    liste_reseaux.append(Reseau(liste_arrets))
+    liste_reseaux[-1].D_build()
+    liste_reseaux[-1].U_build()
+    liste_reseaux[-1].Calcul_ATT(liste_reseaux[-1].U, T)
+    #liste_reseaux[-1].display(False)
+    for a in liste_arrets:
+        a.r_m = False
+        
+
+    
+ATT_liste = ATT_liste_build(liste_reseaux)
+
+
+   
+[liste_reseaux, ATT_liste] = Ordonner_reseaux(liste_reseaux, ATT_liste)
+
+print(ATT_liste)
+
+### Evolution des solutions ###
+
+
     
 nb_iter = 10
 N_pop = len(liste_reseaux)      # Taille de la population
@@ -697,3 +709,4 @@ p_m = 0.3        # Proportion de petite mutation de taille e_m autour du meilleu
 p_s = 0.3        # Proportion de sexe : individu ← (individu max + individu)/2
 
 Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux)
+"""
