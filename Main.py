@@ -18,9 +18,9 @@ f = 6/3600              # Fréquence des bus (bus/s)
 c = 20              # le temps nécessaire pour changer de bus (correspondance, en s)
 
 taille_map = 1000     # (x,y) app à [-taille_map,+taille_map]²
-distance_minimale = 150 # Pour éviter que des arrêts ne soient trop prêts
-hypA = (20,30) #Pas dépasser 35-40 l'algo est de complexité quadratique ça fait bobo
-hypL = (3,4)
+distance_minimale = 250 # Pour éviter que des arrêts ne soient trop prêts
+hypA = (18,20) #Pas dépasser 35-40 l'algo est de complexité quadratique ça fait bobo
+hypL = (4,4)
 hypT = (2,30)
 nb_lignes_max = 3
 
@@ -299,7 +299,8 @@ class Reseau:
         #print("D :", D)
         #print("T :", T)
         
-        self.nb_lignes = rd.randint(hypL[0],hypL[1])     # On veut au moins deux arrêts par lignes, sachant que toutes doivent passer par la gare centrale
+        self.nb_lignes = hypL[0]
+        #self.nb_lignes = rd.randint(hypL[0],hypL[1])     # On veut au moins deux arrêts par lignes, sachant que toutes doivent passer par la gare centrale
         #print("On choisi de créer",self.nb_lignes,"lignes.")
         self.lignes = []
         arrets_dispo.remove(self.r_m)
@@ -381,6 +382,9 @@ class Reseau:
             print("ligne ",ligne.num)
             print("arret ",arret.num," r_m ",arret.r_m)
             print("ligne_arrets ",[a.num for a in ligne.arrets])
+            
+        if next_arret.r_m == True:
+            print("Coincidence ?")
         try:
             next_index = ligne.arrets.index(next_arret)
         except:
@@ -419,9 +423,7 @@ class Reseau:
         
     def U_build(self):
         Graphe = [[False for i in range(len(self.arrets))] for j in range(len(self.arrets))]
-
         for l in self.lignes: #Pour chaque ligne
-            
             for i in range(len(l.arrets)-1):
                 Graphe[l.arrets[i].num][l.arrets[i+1].num] = self.D[l.arrets[i].num][l.arrets[i+1].num]
                 Graphe[l.arrets[i+1].num][l.arrets[i].num] = self.D[l.arrets[i].num][l.arrets[i+1].num]
@@ -464,7 +466,9 @@ class Reseau:
                 ligne_random = rd.choice(self.lignes)
                 while ligne_random == i:
                     ligne_random = rd.choice(self.lignes)
-                self.lignes[self.lignes.index(ligne_random)].arrets.append(arret_supp)
+                #self.lignes[self.lignes.index(ligne_random)].arrets.append(arret_supp)
+                ligne_random.arrets.append(arret_supp)
+                arret_supp.ligne = ligne_random
                 #On rajoute cet arrêt à une autre ligne
             mutation = True
             break # ?
@@ -480,7 +484,6 @@ class Reseau:
         
     def grosse_mut(self, arrets_list):
 
-        
         self.nb_arrets = len(arrets_list)
         self.arrets = copy.deepcopy(arrets_list)
         arrets_dispo = []
@@ -496,7 +499,8 @@ class Reseau:
         #print("D :", D)
         #print("T :", T)
         
-        self.nb_lignes = rd.randint(hypL[0],hypL[1])     # On veut au moins deux arrêts par lignes, sachant que toutes doivent passer par la gare centrale
+        self.nb_lignes = hypL[0]
+        #self.nb_lignes = rd.randint(hypL[0],hypL[1])     # On veut au moins deux arrêts par lignes, sachant que toutes doivent passer par la gare centrale
         #print("On choisi de créer",self.nb_lignes,"lignes.")
         self.lignes = []
         arrets_dispo.remove(self.r_m)
@@ -587,18 +591,23 @@ def Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux, T):
     itera = 0
     tab_iter = []
     tab_iter.append(itera)
-
+    
+    plt.subplot(3,3,1)
+    liste_reseaux[0].display(False)
     ATT_liste = ATT_liste_build(liste_reseaux, T)
+    
     liste_reseaux, ATT_liste = Ordonner_reseaux(liste_reseaux, ATT_liste)
     perf = ATT_liste[0] #
     perf_tab = []
     perf_tab.append(perf)
     tps_init = time.time()
-    
-    while itera < nb_iter:
+    k_fig = 2
+    iter_succ = 0
+    while itera < nb_iter and iter_succ < 30:
         print(itera)
         print(ATT_liste[0])
         itera += 1
+        iter_succ += 1
         #plt.figure(figsize=(20,10))
         for i in range(N_pop):
             
@@ -611,24 +620,37 @@ def Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux, T):
                 pass
             
             # On fait les petites mutations :
-            elif i <= (nb_best + nb_M):
+            elif i <= (nb_best + nb_m):
                 liste_reseaux[i].petite_mut() # boucle infinie parfois 
                 
             # On fait les grandes mutations :
             elif i <= (nb_best + nb_M + nb_m):
-                liste_reseaux[i].grosse_mut(liste_arrets)
+                #liste_reseaux[i].grosse_mut(liste_arrets)
+                liste_reseaux[i] = Reseau(liste_arrets)
             # On fait le sexe :
             else :
                 #liste_reseaux[i].reproduction(liste_reseaux[0])
-                liste_reseaux[i].grosse_mut(liste_arrets)
+                liste_reseaux[i] = Reseau(liste_arrets)
+
             
             liste_reseaux[i].U_build()
         #plt.show()
         ATT_liste = ATT_liste_build(liste_reseaux, T)
         liste_reseaux, ATT_liste = Ordonner_reseaux(liste_reseaux, ATT_liste)
+        
+        if ATT_liste[0] != perf:
+            plt.subplot(3,3,k_fig)
+            liste_reseaux[0].display(False)
+            plt.title(str(itera) + " : " + str(np.round(ATT_liste[0],2)))
+            k_fig += 1
+            iter_succ = 0
+            
         perf = ATT_liste[0]
         perf_tab.append(perf)
         tab_iter.append(tab_iter[-1]+1)
+        
+        if k_fig == 16:
+            break
         
     tps_final = time.time()
     Temps = tps_final-tps_init
@@ -654,12 +676,7 @@ T = T_build(liste_arrets)
 liste_reseaux = []
 print("T construite")
 
-#res = Reseau(liste_arrets)
-#
-#res.calcul_ATT(T)
-#res.display(True)
-
-N_pop = 16
+N_pop = 20
 
 for i in range(N_pop):
     print("individu ",i," créé")
@@ -669,20 +686,15 @@ for i in range(N_pop):
     liste_reseaux[-1].calcul_ATT(T)
     #liste_reseaux[-1].display(False)
 print("Population initiale créée")
-ATT_liste = ATT_liste_build(liste_reseaux, T)
-print("ATT calculée")
-
-[liste_reseaux, ATT_liste] = Ordonner_reseaux(liste_reseaux, ATT_liste)
-
-print(ATT_liste)
 
 ### Evolution des solutions ###
 
-nb_iter = 5
+nb_iter = 100
 N_pop = len(liste_reseaux)      # Taille de la population
-p_M = 0.3        # Proportion de grande mutation
-p_m = 0.3        # Proportion de petite mutation de taille e_m autour du meilleur : individu ← individu max +U([−e_m ,e_m ])
-p_s = 0.3      # Proportion de sexe : individu ← (individu max + individu)/2
+p_M = 0.7      # Proportion de grande mutation
+p_m = 0.2      # Proportion de petite mutation de taille e_m autour du meilleur : individu ← individu max +U([−e_m ,e_m ])
+p_s = 0     # Proportion de sexe : individu ← (individu max + individu)/2
 
 print("Starting Optimization")
+plt.figure(figsize=(20,10))
 print(Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux, T))
