@@ -19,9 +19,9 @@ c = 20              # le temps nécessaire pour changer de bus (correspondance, 
 
 taille_map = 1000     # (x,y) app à [-taille_map,+taille_map]²
 distance_minimale = 250 # Pour éviter que des arrêts ne soient trop prêts
-hypA = (15,20) #Pas dépasser 35-40 l'algo est de complexité quadratique ça fait bobo
+hypA = (20,20) #Pas dépasser 35-40 l'algo est de complexité quadratique ça fait bobo
 hypL = (4,5)
-hypT = (2,30)
+hypT = (5,15)
 nb_lignes_max = 4
 
 
@@ -346,7 +346,7 @@ class Reseau:
     def display(self,show):
         display_arrets(self.arrets)
         display_lignes(self.lignes)
-        plt.grid()
+        plt.axis('off')
         if show:
             plt.show()
 
@@ -506,7 +506,7 @@ class Reseau:
             ligne_heritee = rd.choice(reseau_modele.lignes)
             while ligne_heritee in lignes_utilisees:
                 ligne_heritee = rd.choice(reseau_modele.lignes)
-                lignes_utilisees.append(ligne_heritee)
+            lignes_utilisees.append(ligne_heritee)
             
             arrets_ligne_repliquee = [self.r_m]
             #print(self.arrets)
@@ -618,12 +618,14 @@ def Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux, T):
     tps_init = time.time()
     k_fig = 2
     iter_succ = 0
-    while itera < nb_iter and iter_succ < 30:
+    
+    while itera < nb_iter and iter_succ < 20:
         print(itera)
         print(ATT_liste[0])
         itera += 1
         iter_succ += 1
         #plt.figure(figsize=(20,10))
+        
         for i in range(N_pop):
             
             #plt.subplot(4,4,i+1)
@@ -642,12 +644,13 @@ def Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux, T):
             elif i <= (nb_best + nb_M + nb_m):
                 #liste_reseaux[i].grosse_mut(liste_arrets)
                 liste_reseaux[i] = Reseau(liste_arrets)
-            # On fait le sexe :
+            # On fait la reproduction :
             else :
                 liste_reseaux[i].reproduction(liste_reseaux[0])
 
             
             liste_reseaux[i].U_build()
+        
         #plt.show()
         ATT_liste = ATT_liste_build(liste_reseaux, T)
         liste_reseaux, ATT_liste = Ordonner_reseaux(liste_reseaux, ATT_liste)
@@ -662,19 +665,20 @@ def Optimisation(nb_iter, N_pop, p_M, p_m, p_s, liste_reseaux, T):
         perf = ATT_liste[0]
         perf_tab.append(perf)
         tab_iter.append(tab_iter[-1]+1)
-        
-        if k_fig == 16:
-            break
-        
+        if k_fig > 16:
+            itera = 100000
+            print("not enough space left to plot")
+    #-*-*-*-**-*-*-**-*-*-*-*-*-*---**--*----
+    
+    
     tps_final = time.time()
     Temps = tps_final-tps_init
     
     plt.figure(figsize=(20,10))
-    plt.title("Meilleur individu")
+    plt.title("Meilleur individu. Score: " + str(np.round(ATT_liste[0],2)))
     liste_reseaux[0].display(True)
     fig = plt.figure()
-    ax = fig.add_subplot(2, 1, 1)
-    line, = ax.plot(tab_iter,perf_tab,'bo', lw=2)
+    plt.plot(tab_iter,perf_tab,'bo', lw=2)
     #ax.set_yscale('log')
     pylab.show()
     
@@ -690,7 +694,7 @@ T = T_build(liste_arrets)
 liste_reseaux = []
 print("T construite")
 
-N_pop = 20
+N_pop = 25
 
 for i in range(N_pop):
     print("individu ",i," créé")
